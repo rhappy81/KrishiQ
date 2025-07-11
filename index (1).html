@@ -1,0 +1,347 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KrishiQ - Ayurvedic & Skincare Products</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            overflow-x: hidden;
+        }
+
+        /* Header Styles */
+        header {
+            background-color: #1a3c34;
+            color: white;
+            padding: 1rem 2rem;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        header.scrolled {
+            background-color: rgba(26, 60, 52, 0.9);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 2rem;
+        }
+
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            font-size: 1.1rem;
+            transition: color 0.3s ease;
+        }
+
+        nav ul li a:hover {
+            color: #f4d03f;
+        }
+
+        /* Hero Section */
+        .hero {
+            height: 100vh;
+            background: url('https://images.unsplash.com/photo-1501004318641-b39e6451bec6?q=80&w=2073&auto=format&fit=crop') no-repeat center center/cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: white;
+            position: relative;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .hero-content {
+            z-index: 1;
+            animation: fadeIn 2s ease-in-out;
+        }
+
+        .hero-content h1 {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .hero-content p {
+            font-size: 1.5rem;
+        }
+
+        /* Main Section */
+        .main-section {
+            padding: 4rem 2rem;
+            background-color: #f9f9f9;
+            text-align: center;
+        }
+
+        .main-section h2 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            color: #1a3c34;
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .product-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .product-card:hover {
+            transform: translateY(-10px);
+        }
+
+        .product-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .product-card h3 {
+            font-size: 1.5rem;
+            color: #1a3c34;
+            margin-bottom: 0.5rem;
+        }
+
+        .product-card p {
+            color: #555;
+        }
+
+        .mission {
+            margin-top: 3rem;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        /* Footer */
+        footer {
+            background-color: #1a3c34;
+            color: white;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        footer p {
+            margin-bottom: 0.5rem;
+        }
+
+        footer a {
+            color: #f4d03f;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-on-scroll {
+            opacity: 0;
+            transform: translateY(50px);
+            transition: all 0.6s ease-out;
+        }
+
+        .animate-on-scroll.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .hero-content h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero-content p {
+                font-size: 1.2rem;
+            }
+
+            nav ul {
+                gap: 1rem;
+            }
+
+            nav ul li a {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">KrishiQ</div>
+        <nav>
+            <ul>
+                <li><a href="#home">Home</a></li>
+                <li><a href="#products">Products</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="hero" id="home">
+        <div class="hero-content">
+            <h1>Coming Soon</h1>
+            <p>Discover the Essence of Ayurveda with KrishiQ</p>
+        </div>
+    </section>
+
+    <section class="main-section" id="products">
+        <h2>Our Handmade Ayurvedic Products</h2>
+        <div class="products-grid">
+            <div class="product-card animate-on-scroll">
+                <img src="https://images.unsplash.com/photo-1607002494634-3b8e13b3f781?q=80&w=2070&auto=format&fit=crop" alt="Ayurvedic Soap">
+                <h3>Handmade Soap</h3>
+                <p>Gentle, natural soaps crafted with love using traditional Ayurvedic recipes.</p>
+            </div>
+            <div class="product-card animate-on-scroll">
+                <img src="https://images.unsplash.com/photo-1617897917513-4c9b9f0a2e0a?q=80&w=2070&auto=format&fit=crop" alt="Shampoo">
+                <h3>Herbal Shampoo</h3>
+                <p>Nourishing shampoo infused with natural herbs for healthy, shiny hair.</p>
+            </div>
+            <div class="product-card animate-on-scroll">
+                <img src="https://images.unsplash.com/photo-1629198688000-2e165d8c9a36?q=80&w=2070&auto=format&fit=crop" alt="Reetha Powder">
+                <h3>Reetha Powder</h3>
+                <p>Pure reetha powder for natural hair cleansing and conditioning.</p>
+            </div>
+            <div class="product-card animate-on-scroll">
+                <img src="https://images.unsplash.com/photo-1607002494634-3b8e13b3f781?q=80&w=2070&auto=format&fit=crop" alt="Neem Powder">
+                <h3>Neem Powder</h3>
+                <p>Antibacterial neem powder for healthy skin and scalp.</p>
+            </div>
+            <div class="product-card animate-on-scroll">
+                <img src="https://images.unsplash.com/photo-1593085512500-5d55148d6f0d?q=80&w=2070&auto=format&fit=crop" alt="Tulsi Powder">
+                <h3>Tulsi Powder</h3>
+                <p>Holy basil powder for skin purification and rejuvenation.</p>
+            </div>
+            <div class="product-card animate-on-scroll">
+                <img src="https://images.unsplash.com/photo-1617897917513-4c9b9f0a2e0a?q=80&w=2070&auto=format&fit=crop" alt="Face Packs">
+                <h3>Face Packs</h3>
+                <p>Natural face packs for glowing, radiant skin, made with Ayurvedic herbs.</p>
+            </div>
+        </div>
+
+        <div class="mission animate-on-scroll">
+            <h2>Our Mission</h2>
+            <p>At KrishiQ, we are dedicated to promoting Swadeshi and the visionary ideas of Rajiv Dixit. Our handmade Ayurvedic products are crafted with traditional recipes, celebrating the talent of village women and the wisdom of ancient Indian Nuskhe. We empower local communities and bring you pure, natural skincare solutions.</p>
+        </div>
+    </section>
+
+    <footer id="contact">
+        <p>Created by Sonu Kumar</p>
+        <p>Email: <a href="mailto:care@krishiq.com">care@krishiq.com</a></p>
+        <p>Follow us on Instagram: <a href="https://instagram.com/krishiq.in" target="_blank">@krishiq.in</a></p>
+    </footer>
+
+    <script>
+        // Header scroll effect
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('header');
+            header.classList.toggle('scrolled', window.scrollY > 50);
+        });
+
+        // Scroll animation for cards
+        const animateOnScroll = () => {
+            const elements = document.querySelectorAll('.animate-on-scroll');
+            elements.forEach(element => {
+                const elementTop = element.getBoundingClientRect().top;
+                const windowHeight = window.innerHeight;
+                if (elementTop < windowHeight - 100) {
+                    element.classList.add('visible');
+                }
+            });
+        };
+
+ Nation scroll
+        window.addEventListener('scroll', animateOnScroll);
+        window.addEventListener('load', animateOnScroll);
+    </script>
+</body>
+</html>
